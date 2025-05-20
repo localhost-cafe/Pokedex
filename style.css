@@ -7,10 +7,11 @@ body {
 h1 {
   text-align: center;
   color: #0672bf;
+  cursor: pointer;
 }
 
 .main-block {
-  width: 70%;
+  display: flex;
   margin-left: 40px;
   margin-right: auto;
 }
@@ -38,8 +39,8 @@ h1 {
 }
 
 .pokemon-card img {
-  width: 120px;
-  height: 120px;
+  width: 210px;
+  height: 170px;
 }
 
 .pokemon-types {
@@ -48,6 +49,11 @@ h1 {
   justify-content: center;
   flex-wrap: wrap;
   gap: 6px;
+}
+
+h3 {
+  font-size: 25px;
+  cursor: pointer;
 }
 
 .type {
