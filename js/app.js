@@ -1,9 +1,11 @@
-const pokemonList = document.getElementById('pokemon-list');
-const loadMoreBtn = document.getElementById('load-more');
+const pokemonList = document.querySelector('.pokemon-list');
+const loadMoreBtn = document.querySelector('.load-more-button');
 
-let allPokemonData = JSON.parse(localStorage.getItem('allPokemons')) || [];
-let offset = allPokemonData.length || 0;
+const pokemons = [];
+let offset = 0;
 const limit = 12;
+
+let isPokemonsLoaded = false;
 
 async function fetchPokemonList(offset, limit) {
   const res = await fetch(`https://pokeapi.co/api/v2/pokemon?offset=${offset}&limit=${limit}`);
@@ -11,7 +13,7 @@ async function fetchPokemonList(offset, limit) {
   return data.results;
 }
 
-async function fetchPokemonDetails(url) {
+async function fetchPokemon(url) {
   const res = await fetch(url);
   const data = await res.json();
   return data;
@@ -24,9 +26,6 @@ function renderPokemon(details) {
   const title = document.createElement('h3');
   title.classList.add('pokemon-title');
   title.textContent = details.name.charAt(0).toUpperCase() + details.name.slice(1);
-  title.addEventListener('click', () => {
-    showPokemonDetails(details);
-  });
 
   card.innerHTML = `
     <img src='${details.sprites.front_default}' alt='${details.name}'>
@@ -40,45 +39,85 @@ function renderPokemon(details) {
 
   card.appendChild(title);
   card.appendChild(typesDiv);
+
+  card.addEventListener('click', () => {
+    showPokemonDetails(details);
+  });
+
   pokemonList.appendChild(card);
 }
 
 async function loadPokemons() {
-  const pokemons = await fetchPokemonList(offset, limit);
+  const spinner = document.getElementById('spinner');
+  spinner.style.display = 'block';
+  loadMoreBtn.disabled = true;
 
-  for (const pokemon of pokemons) {
-    const details = await fetchPokemonDetails(pokemon.url);
-    allPokemonData.push(details);
+  const results = await fetchPokemonList(offset, limit);
+
+  const promises = results.map(pokemon => fetchPokemon(pokemon.url));
+  const pokemonDetails = await Promise.all(promises);
+
+  for (const details of pokemonDetails) {
+    pokemons.push(details);
     renderPokemon(details);
   }
 
   offset += limit;
-  localStorage.setItem('allPokemons', JSON.stringify(allPokemonData));
+  spinner.style.display = 'none';
+  loadMoreBtn.disabled = false;
 }
 
 function showPokemonDetails(details) {
-  const detailsContainer = document.getElementById('pokemon-details');
+  const detailsContainer = document.querySelector('.pokemon-details');
   detailsContainer.style.display = 'flex';
 
   detailsContainer.innerHTML = `
     <div class="pokemon-detail-card">
-      <h2>${details.name.charAt(0).toUpperCase() + details.name.slice(1)}</h2>
       <img src="${details.sprites.front_default}" alt="${details.name}" />
-      <p><strong>Height:</strong> ${details.height}</p>
-      <p><strong>Weight:</strong> ${details.weight}</p>
-      <p><strong>Types:</strong> ${details.types.map(t => t.type.name).join(', ')}</p>
+      <h2>${details.name.charAt(0).toUpperCase() + details.name.slice(1)} #${details.id.toString().padStart(3, '0')}</h2>
+      <table class="pokemon-stats-table">
+        <tr>
+          <td>Type</td>
+          <td>${details.types.map(t => t.type.name).join(', ')}</td>
+        </tr>
+        <tr>
+          <td>Attack</td>
+          <td>${details.stats.find(stat => stat.stat.name === 'attack').base_stat}</td>
+        </tr>
+        <tr>
+          <td>Defense</td>
+          <td>${details.stats.find(stat => stat.stat.name === 'defense').base_stat}</td>
+        </tr>
+        <tr>
+          <td>HP</td>
+          <td>${details.stats.find(stat => stat.stat.name === 'hp').base_stat}</td>
+        </tr>
+        <tr>
+          <td>SP Attack</td>
+          <td>${details.stats.find(stat => stat.stat.name === 'special-attack').base_stat}</td>
+        </tr>
+        <tr>
+          <td>SP Defense</td>
+          <td>${details.stats.find(stat => stat.stat.name === 'special-defense').base_stat}</td>
+        </tr>
+        <tr>
+          <td>Speed</td>
+          <td>${details.stats.find(stat => stat.stat.name === 'speed').base_stat}</td>
+        </tr>
+        <tr>
+          <td>Weight</td>
+          <td>${details.weight}</td>
+        </tr>
+        <tr>
+          <td>Total moves</td>
+          <td>${details.moves.length}</td>
+        </tr>
+      </table>
     </div>
   `;
 }
 
 window.addEventListener('DOMContentLoaded', () => {
-  allPokemonData.forEach(pokemon => {
-    renderPokemon(pokemon);
-  });
-});
-
-loadMoreBtn.addEventListener('click', loadPokemons);
-
-if (allPokemonData.length === 0) {
+  loadMoreBtn.addEventListener('click', loadPokemons);
   loadPokemons();
-}
+});
