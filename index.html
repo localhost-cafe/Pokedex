@@ -12,12 +12,19 @@
       <h1>Pokedex</h1>
     </header>
 
-    <main class="main-block">
+    <div class="pokemon-type-filter-container">
+      <select id="type-filter">
+        <option value="all">All</option>
+      </select>
+    </div>
+    <main class="pokemon-list-container">
       <div class="pokemon-list">
-        <div class="spinner"></div>
+        <div class="pokemon-list-spinner">
+          <div class="pokemon-list-loader"></div>
+        </div>
       </div>
-      <div class="pokemon-details"></div>
-      <button class="load-more-button">Load More</button>
+      <div class="pokemon-list-item-details"></div>
+      <button class="pokemon-list-load-more-button hidden">Load More</button>
     </main>
     <script src="js/app.js"></script>
   </body>
