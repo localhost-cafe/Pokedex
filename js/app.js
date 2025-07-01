@@ -113,7 +113,7 @@ window.addEventListener("DOMContentLoaded", () => {
   const loadPokemons = async () => {
     toggleLoading(true);
 
-    const pokemons = await fetchPokemons(offset, limit); // [] -> 12
+    const pokemons = await fetchPokemons(offset, limit);
     const pokemonsDetailed = await Promise.all(
       pokemons.map((pokemon) => fetchPokemonByUrl(pokemon.url))
     );
