@@ -1,123 +1,206 @@
-window.addEventListener('DOMContentLoaded', () => {
-  const pokemonList = document.querySelector('.pokemon-list');
-  const loadMoreBtn = document.querySelector('.load-more-button');
+async function fetchPokemons(offset, limit) {
+  const res = await fetch(
+    `https://pokeapi.co/api/v2/pokemon?offset=${offset}&limit=${limit}`
+  );
+  const data = await res.json();
 
-  const pokemons = [];
-  let offset = 0;
+  return data.results;
+}
+
+async function fetchPokemonByUrl(url) {
+  const res = await fetch(url);
+  const data = await res.json();
+
+  return data;
+}
+
+window.addEventListener("DOMContentLoaded", () => {
+  const loadMoreBtn = document.querySelector(".pokemon-list-load-more-button");
+
+  const allPokemons = [];
   const limit = 12;
 
-  let isLoading = false;
+  let offset = 0;
 
-  async function fetchPokemonList(offset, limit) {
-    const res = await fetch(`https://pokeapi.co/api/v2/pokemon?offset=${offset}&limit=${limit}`);
-    const data = await res.json();
-    return data.results;
-  }
+  const renderPokemon = (pokemon) => {
+    const card = document.createElement("div");
+    card.classList.add("pokemon-card");
 
-  async function fetchPokemon(url) {
-    const res = await fetch(url);
-    const data = await res.json();
-    return data;
-  }
-
-  function renderPokemon(details) {
-    const card = document.createElement('div');
-    card.classList.add('pokemon-card');
-
-    const title = document.createElement('h3');
-    title.classList.add('pokemon-title');
-    title.textContent = details.name.charAt(0).toUpperCase() + details.name.slice(1);
-
-    card.innerHTML = `
-      <img src='${details.sprites.front_default}' alt='${details.name}'>
-    `;
-
-    const typesDiv = document.createElement('div');
-    typesDiv.classList.add('pokemon-types');
-    typesDiv.innerHTML = details.types
-      .map(type => `<span class='type ${type.type.name}'>${type.type.name}</span>`)
-      .join('');
-
-    card.appendChild(title);
-    card.appendChild(typesDiv);
-
-    card.addEventListener('click', () => {
-      showPokemonDetails(details);
+    card.innerHTML = `<img src='${pokemon.sprites.front_default}' alt='${pokemon.name}'>`;
+    card.addEventListener("click", () => {
+      showPokemonDetailed(pokemon);
     });
 
-    pokemonList.appendChild(card);
-  }
+    const title = document.createElement("h3");
+    title.classList.add("pokemon-title");
+    title.textContent =
+      pokemon.name.charAt(0).toUpperCase() + pokemon.name.slice(1);
 
-  async function loadPokemons() {
-    const spinner = document.querySelector('.spinner');
-    spinner.classList.add('active');
-    loadMoreBtn.disabled = true;
+    const types = document.createElement("div");
+    types.classList.add("pokemon-types");
+    types.innerHTML = pokemon.types
+      .map(
+        (type) =>
+          `<span class='type ${type.type.name}'>${type.type.name}</span>`
+      )
+      .join("");
 
-    const results = await fetchPokemonList(offset, limit);
+    card.appendChild(title);
+    card.appendChild(types);
 
-    const promises = results.map(pokemon => fetchPokemon(pokemon.url));
-    const pokemonDetails = await Promise.all(promises);
+    return card;
+  };
 
-    for (const details of pokemonDetails) {
-      pokemons.push(details);
-      renderPokemon(details);
+  const toggleLoading = (isLoading) => {
+    const spinner = document.querySelector(".pokemon-list-spinner");
+    const loadMoreBtn = document.querySelector(
+      ".pokemon-list-load-more-button"
+    );
+
+    if (isLoading) {
+      spinner.classList.add("active");
+      loadMoreBtn.classList.add("hidden");
+    } else {
+      spinner.classList.remove("active");
+      loadMoreBtn.classList.remove("hidden");
     }
 
-    offset += limit;
-    spinner.classList.remove('active');
-    loadMoreBtn.disabled = false;
-  }
+    loadMoreBtn.disabled = isLoading;
+  };
 
-  function showPokemonDetails(details) {
-    const detailsContainer = document.querySelector('.pokemon-details');
-    detailsContainer.style.display = 'flex';
+  const renderTypeFilter = () => {
+    const allTypes = new Set();
+    allPokemons.forEach((pokemon) => {
+      pokemon.types.forEach((t) => allTypes.add(t.type.name));
+    });
+
+    const typeSelect = document.getElementById("type-filter");
+    typeSelect
+      .querySelectorAll('option:not([value="all"])')
+      .forEach((o) => o.remove());
+
+    [...allTypes].sort().forEach((type) => {
+      const option = document.createElement("option");
+      option.value = type;
+      option.textContent = type.charAt(0).toUpperCase() + type.slice(1);
+      typeSelect.appendChild(option);
+    });
+
+    typeSelect.addEventListener("change", () => {
+      const selectedType = typeSelect.value;
+      const pokemonList = document.querySelector(".pokemon-list");
+      const cards = pokemonList.querySelectorAll(".pokemon-card");
+      cards.forEach((card) => card.remove());
+
+      const filtered =
+        selectedType === "all"
+          ? allPokemons
+          : allPokemons.filter((pokemon) =>
+              pokemon.types.some((t) => t.type.name === selectedType)
+            );
+
+      const fragment = document.createDocumentFragment();
+      filtered.forEach((pokemon) => {
+        const card = renderPokemon(pokemon);
+        fragment.appendChild(card);
+      });
+
+      const spinner = document.querySelector(".pokemon-list-spinner");
+      pokemonList.insertBefore(fragment, spinner);
+    });
+  };
+
+  const loadPokemons = async () => {
+    toggleLoading(true);
+
+    const pokemons = await fetchPokemons(offset, limit);
+    const pokemonsDetailed = await Promise.all(
+      pokemons.map((pokemon) => fetchPokemonByUrl(pokemon.url))
+    );
+
+    const fragment = document.createDocumentFragment();
+
+    for (const pokemonDetailed of pokemonsDetailed) {
+      allPokemons.push(pokemonDetailed);
+
+      const card = renderPokemon(pokemonDetailed);
+      fragment.appendChild(card);
+    }
+
+    const pokemonList = document.querySelector(".pokemon-list");
+    const spinner = document.querySelector(".pokemon-list-spinner");
+    pokemonList.insertBefore(fragment, spinner);
+
+    offset += limit;
+    toggleLoading(false);
+
+    renderTypeFilter();
+  };
+
+  function showPokemonDetailed(pokemon) {
+    const detailsContainer = document.querySelector(
+      ".pokemon-list-item-details"
+    );
+    detailsContainer.classList.add("show");
+
+    const findPokemonBaseStat = (pokemon, statName) => {
+      return pokemon.stats.find((stat) => stat.stat.name === statName)
+        .base_stat;
+    };
 
     detailsContainer.innerHTML = `
       <div class="pokemon-detail-card">
-        <img src="${details.sprites.front_default}" alt="${details.name}" />
-        <h2>${details.name.charAt(0).toUpperCase() + details.name.slice(1)} #${details.id.toString().padStart(3, '0')}</h2>
+        <button class="close-button" title="Close">&times;</button>
+        <img src="${pokemon.sprites.front_default}" alt="${pokemon.name}" />
+        <h2>${
+          pokemon.name.charAt(0).toUpperCase() + pokemon.name.slice(1)
+        } #${pokemon.id.toString().padStart(3, "0")}</h2>
         <table class="pokemon-stats-table">
-          <tr>
-            <td>Type</td>
-            <td>${details.types.map(t => t.type.name).join(', ')}</td>
-          </tr>
-          <tr>
-            <td>Attack</td>
-            <td>${details.stats.find(stat => stat.stat.name === 'attack').base_stat}</td>
-          </tr>
-          <tr>
-            <td>Defense</td>
-            <td>${details.stats.find(stat => stat.stat.name === 'defense').base_stat}</td>
-          </tr>
-          <tr>
-            <td>HP</td>
-            <td>${details.stats.find(stat => stat.stat.name === 'hp').base_stat}</td>
-          </tr>
-          <tr>
-            <td>SP Attack</td>
-            <td>${details.stats.find(stat => stat.stat.name === 'special-attack').base_stat}</td>
-          </tr>
-          <tr>
-            <td>SP Defense</td>
-            <td>${details.stats.find(stat => stat.stat.name === 'special-defense').base_stat}</td>
-          </tr>
-          <tr>
-            <td>Speed</td>
-            <td>${details.stats.find(stat => stat.stat.name === 'speed').base_stat}</td>
-          </tr>
-          <tr>
-            <td>Weight</td>
-            <td>${details.weight}</td>
-          </tr>
-          <tr>
-            <td>Total moves</td>
-            <td>${details.moves.length}</td>
-          </tr>
+          <tr><td>Type</td><td>${pokemon.types
+            .map((t) => t.type.name)
+            .join(", ")}</td></tr>
+          <tr><td>Attack</td><td>${findPokemonBaseStat(
+            pokemon,
+            "attack"
+          )}</td></tr>
+          <tr><td>Defense</td><td>${findPokemonBaseStat(
+            pokemon,
+            "defense"
+          )}</td></tr>
+          <tr><td>HP</td><td>${findPokemonBaseStat(pokemon, "hp")}</td></tr>
+          <tr><td>SP Attack</td><td>${findPokemonBaseStat(
+            pokemon,
+            "special-attack"
+          )}</td></tr>
+          <tr><td>SP Defense</td><td>${findPokemonBaseStat(
+            pokemon,
+            "special-defense"
+          )}</td></tr>
+          <tr><td>Speed</td><td>${findPokemonBaseStat(
+            pokemon,
+            "speed"
+          )}</td></tr>
+          <tr><td>Weight</td><td>${pokemon.weight}</td></tr>
+          <tr><td>Total moves</td><td>${pokemon.moves.length}</td></tr>
         </table>
       </div>
     `;
+
+    const closeButton = detailsContainer.querySelector(".close-button");
+    closeButton.addEventListener("click", () => {
+      detailsContainer.classList.remove("show");
+    });
   }
 
-  loadMoreBtn.addEventListener('click', loadPokemons);
+  loadMoreBtn.addEventListener("click", loadPokemons);
   loadPokemons();
+
+  window.addEventListener("resize", () => {
+    const detailsContainer = document.querySelector(
+      ".pokemon-list-item-details"
+    );
+    if (detailsContainer && detailsContainer.classList.contains("show")) {
+      detailsContainer.classList.remove("show");
+    }
+  });
 });
