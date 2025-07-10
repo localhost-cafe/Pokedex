@@ -18,16 +18,17 @@ h1 {
   grid-template-columns: 1fr 300px 60px;
   grid-template-rows: auto auto;
   gap: 50px;
-  margin-left: 40px;
-  margin-right: 40px;
+  margin: 0 40px;
   align-items: start;
 }
 
 .pokemon-list {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 0px;
+  gap: 0;
   position: relative;
+  width: 100%;
+  box-sizing: border-box; /
 }
 
 .pokemon-list-item-details {
@@ -280,11 +281,10 @@ h3 {
 }
 
 .pokemon-list-load-more-button {
-  grid-column: 1 / 2;
-  justify-self: stretch;
-  width: 88%;
-  margin: 20px 5px;
+  width: 84%;
+  box-sizing: border-box;
   padding: 15px 0;
+  margin-top: 34px;
   background-color: #0672bf;
   color: #fff;
   border: none;
@@ -292,10 +292,17 @@ h3 {
   font-size: 16px;
   font-weight: 600;
   cursor: pointer;
-  display: block;
   transition: background-color 0.2s ease, transform 0.2s ease;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-  text-align: center;
+  display: block;
+  grid-column: 1 / -1;
+  box-sizing: border-box;
+}
+
+.pokemon-list-load-more-button:hover {
+  background-color: #0560a8;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .pokemon-list-load-more-button.hidden {
@@ -320,7 +327,7 @@ h3 {
 }
 
 .pokemon-type-filter-container {
-  margin: 20px auto 15px auto;
+  margin: 0 40px 20px 30px;
   padding: 8px 15px;
   background-color: #f5f7fa;
   border-radius: 12px;
@@ -347,7 +354,6 @@ h3 {
   padding: 10px;
   font-weight: 500;
 }
-
 
 .pokemon-list-spinner.active {
   display: block;
@@ -397,6 +403,10 @@ h3 {
     width: 300px;
     margin-top: 20px;
   }
+
+  .pokemon-type-filter-container {
+    margin: 0 40px 20px 45px;
+  }
 }
 
 @media screen and (min-width: 700px) and (max-width: 820px) {
@@ -440,6 +450,10 @@ h3 {
   h3 {
     font-size: 20px;
   }
+
+  .pokemon-type-filter-container {
+    margin: 0 40px 20px 50px;
+  }
 }
 
 @media screen and (min-width: 1025px) {
@@ -467,7 +481,7 @@ h3 {
     border: 2px solid #ddd;
     border-radius: 15px;
     background-color: #fff;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     z-index: 9999;
   }
 
@@ -511,7 +525,7 @@ h3 {
     border: 2px solid #ddd;
     border-radius: 15px;
     background-color: #fff;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     z-index: 9999;
   }
 
@@ -556,7 +570,7 @@ h3 {
     border: 2px solid #ddd;
     border-radius: 15px;
     background-color: #fff;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     z-index: 9999;
   }
 
@@ -573,6 +587,10 @@ h3 {
   .pokemon-card img {
     width: 130px;
     height: 130px;
+  }
+
+  .pokemon-type-filter-container {
+    margin: 0 40px 20px 30px;
   }
 }
 
@@ -611,7 +629,7 @@ h3 {
     border: 2px solid #ddd;
     border-radius: 15px;
     background-color: #fff;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     z-index: 9999;
   }
 
@@ -620,8 +638,12 @@ h3 {
   }
 
   .pokemon-list-load-more-button {
-    width: 92%;
+    width: 100%;
     display: block;
+  }
+
+  .pokemon-type-filter-container {
+    margin: 0 40px 20px 11px;
   }
 }
 
@@ -664,7 +686,7 @@ h3 {
     padding: 25px;
     border-radius: 15px;
     background-color: #fff;
-    box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
     z-index: 10000;
   }
 
@@ -673,7 +695,7 @@ h3 {
   }
 
   .pokemon-list-load-more-button {
-    width: 100%;
+    width: 88%;
     display: block;
     margin: 15px auto;
   }
@@ -733,7 +755,7 @@ h3 {
 
   .pokemon-list-load-more-button {
     display: block;
-    width: 100%;
+    width: 85%;
     margin: 15px auto;
     text-align: center;
   }
